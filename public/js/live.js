@@ -1,92 +1,93 @@
-import { supabase }
-    from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
-window.createStream =
-    async function () {
+console.log("create.js loaded");
 
-        const user =
-            JSON.parse(
-                localStorage.getItem("user")
-            );
+window.createStream = async function () {
 
-        const code =
-            generateStreamCode();
+    console.log("Create Stream clicked");
 
-        const title =
-            document.getElementById(
-                "title"
-            ).value;
+    const user = JSON.parse(
+        localStorage.getItem("user")
+    );
 
-        const description =
-            document.getElementById(
-                "description"
-            ).value;
+    if (!user) {
+        alert("Please login first.");
+        window.location.href = "/login";
+        return;
+    }
 
-        const category =
-            document.getElementById(
-                "category"
-            ).value;
+    const title =
+        document.getElementById("title").value.trim();
 
-        const duration =
-            document.getElementById(
-                "duration"
-            ).value;
+    const description =
+        document.getElementById("description").value.trim();
 
-        const { data, error } =
-            await supabase
-                .from("streams")
-                .insert({
+    const category =
+        document.getElementById("category").value;
 
-                    user_id: user.id,
+    const duration =
+        document.getElementById("duration").value.trim();
 
-                    title,
+    if (!title) {
+        alert("Please enter a stream title.");
+        return;
+    }
 
-                    description,
+    const streamCode = generateStreamCode();
 
-                    category,
+    console.log("Creating stream:", streamCode);
 
-                    expected_duration:
-                        duration,
+    const { data, error } = await supabase
+        .from("streams")
+        .insert({
+            user_id: user.id,
+            title: title,
+            description: description,
+            category: category,
+            expected_duration: duration,
+            stream_code: streamCode,
+            is_live: false
+        })
+        .select()
+        .single();
 
-                    stream_code: code,
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
-                    is_live: false
+    if (error) {
+        alert(error.message);
+        return;
+    }
 
-                })
-                .select()
-                .single();
+    localStorage.setItem(
+        "currentStream",
+        JSON.stringify(data)
+    );
 
-        if (error) {
+    const shareLink =
+        window.location.origin +
+        "/view/" +
+        streamCode;
 
-            alert(error.message);
+    alert(
+        "Stream created successfully!\n\n" +
+        shareLink
+    );
 
-            return;
+    window.location.href =
+        "/broadcast/" +
+        streamCode;
+};
 
-        }
-
-        const link =
-            window.location.origin +
-            "/view/" + code;
-
-        localStorage.setItem(
-            "currentStream",
-            JSON.stringify(data)
-        );
-
-        alert(
-            "Share this link:\n\n" +
-            link
-        );
-
-        window.location.href =
-            "/broadcast/" + code;
-
-    };
-
-    // Generate unique stream code
 function generateStreamCode() {
-    return "pulse-" +
+
+    return (
+        "pulse-" +
         Date.now().toString(36) +
         "-" +
-        Math.random().toString(36).substring(2, 8);
+        Math.random()
+            .toString(36)
+            .substring(2, 8)
+    );
+
 }

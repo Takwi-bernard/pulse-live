@@ -7,101 +7,111 @@ document.getElementById("remoteVideo");
 
 const peerConnection =
 new RTCPeerConnection({
-
-    iceServers:[
+    iceServers: [
         {
-            urls:"stun:stun.l.google.com:19302"
+            urls: "stun:stun.l.google.com:19302"
         }
     ]
-
 });
 
-const params =
-new URLSearchParams(
-window.location.search
+const streamCode =
+window.location.pathname
+.split("/")
+.pop();
+
+console.log("Watching:", streamCode);
+
+socket.emit(
+    "joinStream",
+    streamCode
 );
 
-const streamCode =
-params.get("stream");
+let localStream = null;
 
-let localStream;
+/*
+========================
+LOAD STREAM
+========================
+*/
 
+async function loadStream() {
 
-// LOAD STREAM
-
-async function loadStream(){
-
-    const {data,error} =
+    const { data, error } =
     await supabase
     .from("streams")
     .select("*")
-    .eq(
-        "stream_code",
-        streamCode
-    )
+    .eq("stream_code", streamCode)
     .single();
 
-    if(error||!data){
-
+    if (error || !data) {
         showExpired();
-
         return;
-
     }
 
-    if(!data.is_live){
-
+    if (!data.is_live) {
         showExpired();
-
         return;
-
     }
 
-    document
-    .getElementById(
-    "streamTitle"
-    ).innerText=
-    data.title;
+    const title =
+    document.getElementById("streamTitle");
 
-    document
-    .getElementById(
-    "streamCategory"
-    ).innerText=
-    data.category;
+    if(title){
+        title.innerText =
+        data.title || "Untitled";
+    }
 
-    document
-    .getElementById(
-    "hostName"
-    ).innerText=
-    "Live Host";
+    const category =
+    document.getElementById("streamCategory");
+
+    if(category){
+        category.innerText =
+        data.category || "";
+    }
+
+    const host =
+    document.getElementById("hostName");
+
+    if(host){
+        host.innerText =
+        "Live Host";
+    }
 
 }
 
 loadStream();
 
+/*
+========================
+VIDEO
+========================
+*/
 
-// RECEIVE VIDEO
+peerConnection.ontrack =
+(event)=>{
 
-peerConnection.ontrack=(event)=>{
-
-    remoteVideo.srcObject=
+    remoteVideo.srcObject =
     event.streams[0];
 
 };
+socket.emit("joinStream", streamCode);
 
-
-// RECEIVE OFFER
+/*
+========================
+OFFER
+========================
+*/
 
 socket.on(
 "offer",
-async(offer)=>{
+async(data)=>{
 
     await peerConnection
     .setRemoteDescription(
-        offer
+        data
     );
 
-    const answer=
+    const answer =
     await peerConnection
     .createAnswer();
 
@@ -112,13 +122,22 @@ async(offer)=>{
 
     socket.emit(
         "answer",
-        answer
+        {
+            code:
+            streamCode,
+
+            answer:
+            answer
+        }
     );
 
 });
 
-
-// RECEIVE ICE
+/*
+========================
+ICE
+========================
+*/
 
 socket.on(
 "candidate",
@@ -141,30 +160,37 @@ async(candidate)=>{
 
 });
 
-
-// SEND ICE
-
-peerConnection.onicecandidate=(event)=>{
+peerConnection.onicecandidate =
+(event)=>{
 
     if(event.candidate){
 
         socket.emit(
             "candidate",
-            event.candidate
+            {
+                code:
+                streamCode,
+
+                candidate:
+                event.candidate
+            }
         );
 
     }
 
 };
 
-
-// VIEWER MIC
+/*
+========================
+VIEWER AUDIO
+========================
+*/
 
 async function initAudio(){
 
     try{
 
-        localStream=
+        localStream =
         await navigator
         .mediaDevices
         .getUserMedia({
@@ -178,7 +204,8 @@ async function initAudio(){
         .getAudioTracks()
         .forEach(track=>{
 
-            track.enabled=false;
+            track.enabled =
+            false;
 
         });
 
@@ -194,156 +221,182 @@ async function initAudio(){
 
 initAudio();
 
+/*
+========================
+MIC
+========================
+*/
 
-// MIC
+window.toggleMic =
+function(){
 
-window.toggleMic=function(){
+    if(!localStream)
+    return;
 
-    if(!localStream)return;
-
-    const track=
+    const track =
     localStream
     .getAudioTracks()[0];
 
-    track.enabled=
+    if(!track)
+    return;
+
+    track.enabled =
     !track.enabled;
 
 };
 
+/*
+========================
+FULLSCREEN
+========================
+*/
 
-// FULLSCREEN
+window.toggleFullscreen =
+function(){
 
-window.toggleFullscreen=function(){
+    if(remoteVideo.requestFullscreen){
 
-    remoteVideo
-    .requestFullscreen();
+        remoteVideo.requestFullscreen();
+
+    }
 
 };
 
+/*
+========================
+COPY LINK
+========================
+*/
 
-// COPY LINK
+window.copyStreamLink =
+function(){
 
-window.copyStreamLink=function(){
-
-    navigator
-    .clipboard
+    navigator.clipboard
     .writeText(
-    window.location.href
+        window.location.href
     );
 
     alert(
-    "Link copied."
+        "Link copied!"
     );
 
 };
 
+/*
+========================
+LEAVE
+========================
+*/
 
-// LEAVE
-
-window.leaveStream=function(){
+window.leaveStream =
+function(){
 
     socket.disconnect();
 
     peerConnection.close();
 
-    window.location.href=
+    window.location.href =
     "/view";
 
 };
 
+/*
+========================
+CHAT
+========================
+*/
 
-// CHAT
+window.sendMessage =
+function(){
 
-window.sendMessage=function(){
-
-    const input=
+    const input =
     document
     .getElementById(
-    "chatMessage"
+        "chatMessage"
     );
 
     if(
-    input.value.trim()==""
-    ) return;
+        input.value.trim() === ""
+    ){
+        return;
+    }
 
     socket.emit(
-    "chat",
-    input.value
+        "chat",
+        {
+            code:
+            streamCode,
+
+            message:
+            input.value
+        }
     );
 
-    input.value="";
+    input.value = "";
 
 };
-
 
 socket.on(
 "chat",
 (msg)=>{
 
-    const messages=
+    const messages =
     document
     .getElementById(
-    "messages"
+        "messages"
     );
 
-    messages.innerHTML+=`
-
-    <div class="chat-message">
-
+    messages.innerHTML +=
+    `<div class="chat-message">
     ${msg}
+    </div>`;
 
-    </div>
-
-    `;
-
-    messages.scrollTop=
+    messages.scrollTop =
     messages.scrollHeight;
 
 });
 
-
-// STREAM ENDED
+/*
+========================
+STREAM ENDED
+========================
+*/
 
 socket.on(
 "streamEnded",
 ()=>{
 
     alert(
-    "This stream has ended."
+        "This stream has ended."
     );
 
-    window.location.href=
+    window.location.href =
     "/view";
 
 });
 
-
-// EXPIRED
+/*
+========================
+EXPIRED
+========================
+*/
 
 function showExpired(){
 
-document.body.innerHTML=`
+document.body.innerHTML = `
 
 <div class="container">
 
 <div class="card">
 
-<h1>
-
-Stream Ended
-
-</h1>
+<h1>Stream Ended</h1>
 
 <p>
-
 This stream is no longer available.
-
 </p>
 
 <button onclick="window.location='/view'">
-
 Browse Streams
-
 </button>
 
 </div>
@@ -353,15 +406,3 @@ Browse Streams
 `;
 
 }
-
-
-// VIEWER JOIN
-
-window.onload=()=>{
-
-    socket.emit(
-        "viewerJoined",
-        streamCode
-    );
-
-};

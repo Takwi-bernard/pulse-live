@@ -1,153 +1,90 @@
-import { supabase }
-    from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
+
+const container = document.getElementById("streamList");
 
 async function loadStreams() {
+  await supabase
+.from("streams")
+.delete()
+.eq("is_live", false);
+    if (!container) return;
 
-    const { data, error } =
+    const { data, error } = await supabase
+        .from("streams")
+        .select("*")
+        .eq("is_live", true)
+        .order("started_at", {
+            ascending: false
 
-        await supabase
+        });
 
-            .from("streams")
-
-            .select("*")
-
-            .eq("is_live", true)
-
-            .order(
-                "started_at",
-                {
-                    ascending: false
-                }
-            );
-
+      
+console.log(data);
+console.log(error);
     if (error) {
-
         console.log(error);
-
         return;
-
     }
-
-    renderStreams(data);
-
-}
-
-loadStreams();
-
-function renderStreams(streams) {
-
-    const container =
-
-        document.getElementById(
-            "streamList"
-        );
 
     container.innerHTML = "";
 
-    if (streams.length == 0) {
+    if (!data || data.length === 0) {
 
         container.innerHTML = `
-
-<div class="card">
-
-<h2>
-
-No active streams.
-
-</h2>
-
-<p>
-
-Come back later.
-
-</p>
-
-</div>
-
-`;
+        <div class="card">
+            <h3>No Live Streams</h3>
+            <p>Come back later.</p>
+        </div>
+        `;
 
         return;
-
     }
 
-    streams.forEach(stream => {
+    data.forEach(stream => {
 
         container.innerHTML += `
+        <div class="stream-card">
 
-<div class="stream-card">
+            <h2>${stream.title}</h2>
 
-<div class="stream-thumb">
-</div>
+            <p>🔴 LIVE</p>
 
-<div class="stream-content">
+            <p>${stream.category}</p>
 
-<p class="live-badge">
+            <button onclick="joinStream('${stream.stream_code}')">
+                Join Stream
+            </button>
 
-🔴 LIVE
-
-</p>
-
-<h3>
-
-${stream.title}
-
-</h3>
-
-<p>
-
-${stream.category}
-
-</p>
-
-<p>
-
-👥 ${stream.viewers || 0}
-
-Watching
-
-</p>
-
-<button
-
-class="watch-btn"
-
-onclick="joinStream(
-'${stream.stream_code}'
-)">
-
-Watch Live
-
-</button>
-
-</div>
-
-</div>
-
-`;
+        </div>
+        `;
 
     });
-
 }
 
+window.joinStream = function (code) {
 
-
-window.joinStream = function(code){
+    console.log("Joining:", code);
 
     const user = JSON.parse(
         localStorage.getItem("user")
     );
 
-    if(!user){
+    if (!user) {
 
         localStorage.setItem(
             "pendingStream",
             code
         );
 
-        window.location.href="/login";
+        window.location.href = "/login";
         return;
     }
 
-    window.location.href=
-        "/pages/watch.html?stream="+code;
-}
+    window.location.href =
+        "/watch/" + code;
+};
+
+window.onload = () => {
+    loadStreams();
+    setInterval(loadStreams, 5000);
+};

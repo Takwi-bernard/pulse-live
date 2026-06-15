@@ -78,3 +78,26 @@ window.logout = async function () {
 
     window.location.replace("/login");
 };
+
+
+const pending=
+localStorage.getItem(
+"pendingStream"
+);
+
+if(pending){
+
+    localStorage.removeItem(
+    "pendingStream"
+    );
+
+    window.location.href=
+    "/watch?stream="+pending;
+
+}
+else{
+
+    window.location.href=
+    "/dashboard";
+
+}

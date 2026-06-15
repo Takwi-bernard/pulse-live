@@ -10,25 +10,76 @@ const peerConnection = new RTCPeerConnection({
     ]
 });
 
-let localStream;
-let screenStream;
+let localStream = null;
+let screenStream = null;
 
 const localVideo =
 document.getElementById("localVideo");
 
 const streamCode =
-window.location.pathname.split("/").pop();
+window.location.pathname
+.split("/")
+.pop();
 
-console.log(streamCode);
+console.log("Broadcast:", streamCode);
 
-// START CAMERA
+socket.emit(
+    "joinStream",
+    streamCode
+);
+
+/*
+LOAD STREAM
+*/
+
+async function loadStream(){
+
+    const { data,error } =
+    await supabase
+    .from("streams")
+    .select("*")
+    .eq(
+        "stream_code",
+        streamCode
+    )
+    .single();
+
+    if(error){
+
+        console.log(error);
+        return;
+
+    }
+
+    const title =
+    document.getElementById(
+        "streamTitle"
+    );
+
+    if(title){
+
+        title.innerText =
+        data.title ||
+        "Untitled Stream";
+
+    }
+
+}
+
+loadStream();
+
+/*
+CAMERA
+*/
 
 async function startCamera(){
 
     try{
 
         localStream =
-        await navigator.mediaDevices.getUserMedia({
+        await navigator
+        .mediaDevices
+        .getUserMedia({
 
             video:true,
             audio:true
@@ -38,7 +89,9 @@ async function startCamera(){
         localVideo.srcObject =
         localStream;
 
-        localStream.getTracks().forEach(track=>{
+        localStream
+        .getTracks()
+        .forEach(track=>{
 
             peerConnection.addTrack(
                 track,
@@ -53,7 +106,9 @@ async function startCamera(){
 
         console.log(err);
 
-        alert("Camera access denied.");
+        alert(
+        "Camera access denied."
+        );
 
     }
 
@@ -61,35 +116,40 @@ async function startCamera(){
 
 startCamera();
 
+/*
+WEBRTC
+*/
 
-// SOCKET SIGNALING
-
-peerConnection.onicecandidate=(event)=>{
+peerConnection.onicecandidate=
+(event)=>{
 
     if(event.candidate){
 
         socket.emit(
             "candidate",
-            event.candidate
+            {
+
+                code:
+                streamCode,
+
+                candidate:
+                event.candidate
+
+            }
         );
 
     }
 
 };
 
- socket = io();
-
-socket.emit(
-    "joinStream",
-    streamCode
-);
-
 socket.on(
 "answer",
 async(answer)=>{
 
     await peerConnection
-    .setRemoteDescription(answer);
+    .setRemoteDescription(
+        answer
+    );
 
 });
 
@@ -100,7 +160,9 @@ async(candidate)=>{
     try{
 
         await peerConnection
-        .addIceCandidate(candidate);
+        .addIceCandidate(
+            candidate
+        );
 
     }
 
@@ -112,31 +174,46 @@ async(candidate)=>{
 
 });
 
-
-// COPY INVITE
+/*
+COPY LINK
+*/
 
 document
-.getElementById("copyBtn")
+.getElementById(
+"copyBtn"
+)
 .onclick=function(){
 
     const link =
-    window.location.origin+
-    "/watch?stream="+
+
+    window.location.origin +
+
+    "/watch/" +
+
     streamCode;
 
-    navigator.clipboard.writeText(link);
+    navigator
+    .clipboard
+    .writeText(link);
 
-    alert("Invite copied!");
+    alert(
+    "Invite copied!"
+    );
 
 };
 
-
-// START STREAM
+/*
+START STREAM
+*/
 
 document
-.getElementById("startBtn")
-.onclick=async function(){
+.getElementById(
+"startBtn"
+)
+.onclick=
+async function(){
 
+    const { error } =
     await supabase
     .from("streams")
     .update({
@@ -152,6 +229,13 @@ document
         streamCode
     );
 
+    if(error){
+
+        alert(error.message);
+        return;
+
+    }
+
     const offer =
     await peerConnection
     .createOffer();
@@ -163,64 +247,102 @@ document
 
     socket.emit(
         "offer",
-        offer
+        {
+
+            code:
+            streamCode,
+
+            offer:
+            offer
+
+        }
     );
 
     document
     .getElementById(
     "liveStatus"
-    ).innerHTML=
+    )
+    .innerHTML=
     "🔴 LIVE";
 
     this.disabled=true;
 
 };
 
-
-// MIC
+/*
+MIC
+*/
 
 document
-.getElementById("micBtn")
+.getElementById(
+"micBtn"
+)
 .onclick=function(){
 
-    const track =
+    if(!localStream)
+    return;
+
+    const track=
     localStream
     .getAudioTracks()[0];
 
+    if(!track)
+    return;
+
     track.enabled=
     !track.enabled;
 
     this.innerHTML=
+
     track.enabled ?
-    "🎤":"🔇";
+
+    "🎤":
+
+    "🔇";
 
 };
 
-
-// CAMERA
+/*
+CAMERA
+*/
 
 document
-.getElementById("camBtn")
+.getElementById(
+"camBtn"
+)
 .onclick=function(){
 
-    const track =
+    if(!localStream)
+    return;
+
+    const track=
     localStream
     .getVideoTracks()[0];
 
+    if(!track)
+    return;
+
     track.enabled=
     !track.enabled;
 
     this.innerHTML=
+
     track.enabled ?
-    "📹":"🚫";
+
+    "📹":
+
+    "🚫";
 
 };
 
-
-// SCREEN SHARE
+/*
+SCREEN SHARE
+*/
 
 document
-.getElementById("screenBtn")
+.getElementById(
+"screenBtn"
+)
 .onclick=
 async function(){
 
@@ -242,14 +364,22 @@ async function(){
         peerConnection
         .getSenders()
         .find(s=>
-        s.track &&
-        s.track.kind==="video"
+
+            s.track &&
+            s.track.kind==="video"
+
         );
 
-        sender.replaceTrack(
-            screenStream
-            .getVideoTracks()[0]
-        );
+        if(sender){
+
+            sender.replaceTrack(
+
+                screenStream
+                .getVideoTracks()[0]
+
+            );
+
+        }
 
         screenStream
         .getVideoTracks()[0]
@@ -258,10 +388,16 @@ async function(){
             localVideo.srcObject=
             localStream;
 
-            sender.replaceTrack(
-                localStream
-                .getVideoTracks()[0]
-            );
+            if(sender){
+
+                sender.replaceTrack(
+
+                    localStream
+                    .getVideoTracks()[0]
+
+                );
+
+            }
 
         };
 
@@ -275,11 +411,14 @@ async function(){
 
 };
 
-
-// END STREAM
+/*
+END STREAM
+*/
 
 document
-.getElementById("endBtn")
+.getElementById(
+"endBtn"
+)
 .onclick=
 async function(){
 
@@ -292,7 +431,10 @@ async function(){
     .from("streams")
     .update({
 
-        is_live:false
+        is_live:false,
+
+        ended_at:
+        new Date()
 
     })
     .eq(
@@ -326,16 +468,18 @@ async function(){
 
     }
 
-    localVideo.srcObject=null;
+    localVideo.srcObject=
+    null;
 
     document
     .getElementById(
     "liveStatus"
-    ).innerHTML=
+    )
+    .innerHTML=
     "⚫ OFFLINE";
 
     alert(
-        "Stream ended."
+    "Stream ended."
     );
 
     window.location.href=
