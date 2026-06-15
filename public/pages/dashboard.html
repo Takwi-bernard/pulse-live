@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="../css/style.css">
+<title>Pulse Live Dashboard</title>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <h2 class="logo">Pulse Live</h2>
+
+        <div class="nav">
+            <button type="submit" onclick="goLive()">🎥 Go Live</button>
+            <button onclick="watchLive()">📺 Explore</button>
+            <button onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <div class="user-box">
+            <p id="userEmail">Loading...</p>
+        </div>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <div class="topbar">
+            <h3>Live Streams</h3>
+            <p>Discover what’s happening now</p>
+        </div>
+
+        <!-- STREAM GRID -->
+        <div class="grid">
+
+            <div class="card-stream">
+                <div class="thumbnail"></div>
+                <h4>No active streams yet</h4>
+                <p>Be the first to go live</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- <script src="../js/supabaseClient.js"></script>
+<script src="../js/auth.js"></script> -->
+<script type="module" src="../js/dashboard.js"></script>
+
+</body>
+</html>

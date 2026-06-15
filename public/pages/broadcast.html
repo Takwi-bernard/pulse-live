@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Create Stream</title>
+</head>
+
+<body>
+
+
+
+    <div class="studio">
+
+        <header class="topbar">
+            <h2>Pulse Live</h2>
+            <span id="liveStatus">⚫ OFFLINE</span>
+        </header>
+
+        <div class="main-layout">
+
+            <div class="video-panel">
+
+                <div class="video-wrapper">
+
+                    <video id="localVideo" autoplay muted playsinline>
+                    </video>
+
+                </div>
+
+                <div class="controls">
+
+                    ...
+
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+
+
+                <button id="micBtn">🎤</button>
+
+                <button id="camBtn">📹</button>
+
+                <button id="screenBtn">🖥️</button>
+
+                <button id="copyBtn">📋</button>
+
+                <button id="startBtn">🔴</button>
+
+                <button id="endBtn">❌</button>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+    <div class="side-panel">
+
+        <div class="stream-info">
+
+            <h3 id="streamTitle">
+                Untitled Stream
+            </h3>
+
+            <p>
+                🔴 OFFLINE
+            </p>
+
+            <p id="inviteLink">
+                Generating...
+            </p>
+
+            <p>
+                👥
+                <span id="viewerCount">
+                    0
+                </span>
+                watching
+            </p>
+
+            <p>
+                ⏱
+                <span id="streamTime">
+                    00:00
+                </span>
+            </p>
+
+        </div>
+
+        <div class="chat">
+
+            <div id="messages"></div>
+
+            <div class="chat-box">
+
+                <input placeholder="Message">
+
+                <button>
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="../js/broadcast.js"></script>

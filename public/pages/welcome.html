@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="hero">
+
+        <h1>Welcome to <span>Pulse Live</span></h1>
+
+        <p>Watch live streams, connect with creators, and share moments in real time.</p>
+
+    </div>
+
+    <div class="card">
+
+        <button class="btn" onclick="goLogin()">Sign In</button>
+
+        <button class="btn secondary" onclick="goRegister()">Create Account</button>
+
+        <p class="small-text">Join thousands of live creators today</p>
+
+    </div>
+
+</div>
+
+<script>
+function goLogin() {
+    console.log("Going to login...");
+    window.location.replace("/login");
+}
+
+function goRegister() {
+    console.log("Going to register...");
+    window.location.replace("/register");
+}
+</script>
+
+</body>
+</html>

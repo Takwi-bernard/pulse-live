@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Watch Stream</title>
+
+<link rel="stylesheet"
+href="../css/style.css">
+
+</head>
+
+<body>
+
+<div class="watch-page">
+
+<header class="watch-header">
+
+<div>
+
+<h2>Pulse Live</h2>
+
+<p id="streamStatus">
+🔴 LIVE
+</p>
+
+</div>
+
+<div>
+
+<p id="viewerCount">
+👥 0 Watching
+</p>
+
+</div>
+
+</header>
+
+<div class="watch-layout">
+
+<div class="video-area">
+
+<video id="remoteVideo" autoplay playsinline controls></video>
+
+<h2 id="streamTitle"></h2>
+<p id="streamCategory"></p>
+<p id="hostName"></p>
+
+
+<button onclick="sendMessage()">Send</button>
+
+<button onclick="toggleMic()">🎤</button>
+
+<button onclick="toggleFullscreen()">⛶</button>
+
+<button onclick="copyStreamLink()">📋</button>
+
+<button onclick="leaveStream()">Leave</button>
+<div class="watch-actions">
+
+<button
+onclick="copyStreamLink()">
+📋 Share
+</button>
+
+<button
+onclick="toggleFullscreen()">
+⛶ Fullscreen
+</button>
+
+</div>
+
+</div>
+
+<div class="chat-panel">
+
+<h3>
+💬 Live Chat
+</h3>
+
+<div id="messages">
+</div>
+
+<div class="chat-message">
+
+<input
+id="chatMessage"
+placeholder="Type a message">
+
+<button
+onclick="sendMessage()">
+Send
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="module"
+src="../js/watch.js">
+</script>
+
+</body>
+
+</html>

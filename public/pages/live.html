@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet"
+href="../css/style.css">
+<title>Create Stream</title>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>🎥 Create Live Stream</h2>
+
+<input
+id="title"
+placeholder="Stream title">
+
+<textarea
+id="description"
+placeholder="Description"></textarea>
+
+<select id="category">
+<option>Coding</option>
+<option>Education</option>
+<option>Gaming</option>
+<option>Music</option>
+<option>General</option>
+</select>
+
+<input
+id="duration"
+placeholder="Expected duration">
+
+<select id="privacy">
+<option value="public">
+Public
+</option>
+
+<option value="private">
+Private
+</option>
+</select>
+
+<button
+class="btn"
+onclick="createStream()">
+
+Create Stream
+
+</button>
+
+</div>
+
+</div>
+
+<script type="module"
+src="../js/live.js"></script>
+
+</body>
+</html>
