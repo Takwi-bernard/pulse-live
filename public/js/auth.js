@@ -61,9 +61,29 @@ window.login = async function () {
         return;
     }
 
-    localStorage.setItem("user", JSON.stringify(data.user));
+   localStorage.setItem(
+    "user",
+    JSON.stringify(data.user)
+);
 
-    window.location.replace("/dashboard");
+const pending =
+localStorage.getItem("pendingStream");
+
+if (pending) {
+
+    localStorage.removeItem(
+        "pendingStream"
+    );
+
+    window.location.href =
+    "/watch/" + pending;
+
+} else {
+
+    window.location.href =
+    "/dashboard";
+
+}
 };
 
 // NAVIGATION
@@ -80,24 +100,3 @@ window.logout = async function () {
 };
 
 
-const pending=
-localStorage.getItem(
-"pendingStream"
-);
-
-if(pending){
-
-    localStorage.removeItem(
-    "pendingStream"
-    );
-
-    window.location.href=
-    "/watch?stream="+pending;
-
-}
-else{
-
-    window.location.href=
-    "/dashboard";
-
-}
